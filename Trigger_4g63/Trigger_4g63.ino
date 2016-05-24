@@ -1,6 +1,6 @@
 //Simple 4G63 trigger wheel simulator for Arduino
 //Copyright 2015 John Stäck
-//Released under GNU General Public License v3
+//Licensed under GNU General Public License v3
 
 #include <TimerOne.h>
 
@@ -21,7 +21,7 @@
 
 #define RPM_LOG 10 //Logarithmicness of RPM dial
 
-#define USE_RPM_DIAL true
+#define USE_RPM_DIAL true //Use potentiometer for setting RPM, if false use hardcoded value
 
 //Use second input for fine-tuning rpm
 //#define USE_RPM_FINE true
