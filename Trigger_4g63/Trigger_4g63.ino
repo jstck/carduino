@@ -1,12 +1,9 @@
 //Simple 4G63 trigger wheel simulator for Arduino
-//Copyright 2015 John Stäck
+//Copyright 2016 John Stäck
 //Licensed under GNU General Public License v3
 
 #include <TimerOne.h>
 
-//Number of phases per full engine cycle (usually two crankshaft / one camshaft rotation)
-//Whatever resolution is needed to model the full detail of the trigger wheel(s)
-#define N_PHASES 32
 
 //How many revolutions the engine makes for one full cycle of the whole trigger table.
 //Most 4-stroke engines will have a value of 2.
@@ -49,50 +46,161 @@ const float rpm_fine_part = 0.05; //Adjustment span of fine tune.
 //Leave the corresponding "-" pins disconnected. They're used for different kind of sensors. The 5V pulse out
 //of the arduino is appropriate for triggering the Megasquirt as if it where a hall or optical trigger
 
-//This has been built largely on the information on http://www.rivercityroad.com/garage/cas.htm
-//and has successfully provided timing info for a Megasquirt unit.
-//Unknown what max speed is, but has been tested up to 30K RPM on an Arduino Uno.
-
+//Mostly based on chart in http://speeduino.com/wiki/index.php/4G63. Also thanks to noisymime.
 //Third pin is a purely diagnostic output, to trigger once per cycle (useful as oscilloscope trigger)
 
 //Fourth pin is just a "as fast as you can switch" output for VSS testing
 
-//TDC is somewhere at step 3-4 for each cylider as marked below.
+
+//Each "phase" (step) is 5 degrees, whole cycle is 720 degrees.
+#define N_PHASES 144
 
 uint8_t phases[N_PHASES][N_OUTPUTS] =
 {
-  {1, 0, 1, 0},  //Cyl1
-  {1, 1, 1, 1},
-  {1, 1, 1, 0},
-  {1, 1, 1, 1},
-  {1, 1, 1, 0},
-  {1, 0, 1, 1},
-  {0, 0, 1, 0},
-  {0, 0, 1, 1},
-  {0, 0, 0, 0},  //Cyl3
-  {0, 1, 0, 1},
-  {0, 1, 0, 0},
-  {0, 1, 0, 1},
-  {0, 1, 0, 0},
-  {0, 0, 0, 1},
-  {0, 0, 0, 0},
-  {0, 0, 0, 1},
-  {1, 0, 0, 0},  //Cyl4
-  {1, 1, 0, 1},
-  {1, 1, 0, 0},
-  {0, 1, 0, 1},
-  {0, 1, 0, 0},
-  {0, 0, 0, 1},
-  {0, 0, 0, 0},
-  {0, 0, 0, 1},
-  {0, 0, 0, 0},  //Cyl2
-  {0, 1, 0, 1},
-  {0, 1, 0, 0},
-  {0, 1, 0, 1},
-  {0, 1, 0, 0},
-  {0, 0, 0, 1},
-  {0, 0, 0, 0},
-  {0, 0, 0, 1}
+  {0, 0, 1, 0}, //  0
+  {0, 0, 1, 1}, //  5
+  {0, 0, 1, 0}, // 10
+  {0, 0, 1, 1}, // 15
+  {0, 0, 1, 0}, // 20
+  {0, 0, 1, 1}, // 25
+  {0, 0, 1, 0}, // 30
+  {0, 0, 1, 1}, // 35
+  {0, 0, 1, 0}, // 40
+  {0, 0, 1, 1}, // 45
+  {0, 0, 1, 0}, // 50
+  {0, 0, 1, 1}, // 55
+  {0, 0, 1, 0}, // 60
+  {0, 0, 1, 1}, // 65
+  {0, 0, 1, 0}, // 70
+  {0, 0, 1, 1}, // 75
+  {0, 0, 1, 0}, // 80
+  {0, 0, 1, 1}, // 85
+  {0, 0, 0, 0}, // 90
+  {0, 0, 0, 1}, // 95
+  {0, 0, 0, 0}, //100
+  {1, 0, 0, 1}, //105
+  {1, 0, 0, 0}, //110
+  {1, 0, 0, 1}, //115
+  {1, 0, 0, 0}, //120
+  {1, 0, 0, 1}, //125
+  {1, 0, 0, 0}, //130
+  {1, 0, 0, 1}, //135
+  {1, 0, 0, 0}, //140
+  {1, 0, 0, 1}, //145
+  {1, 0, 0, 0}, //150
+  {1, 0, 0, 1}, //155
+  {1, 0, 0, 0}, //160
+  {1, 0, 0, 1}, //165
+  {1, 0, 0, 0}, //170
+  {0, 0, 0, 1}, //175
+  {0, 0, 0, 0}, //180
+  {0, 0, 0, 1}, //185
+  {0, 0, 0, 0}, //190
+  {0, 0, 0, 1}, //195
+  {0, 0, 0, 0}, //200
+  {0, 0, 0, 1}, //205
+  {0, 0, 0, 0}, //210
+  {0, 0, 0, 1}, //215
+  {0, 0, 0, 0}, //220
+  {0, 0, 0, 1}, //225
+  {0, 0, 0, 0}, //230
+  {0, 0, 0, 1}, //235
+  {0, 0, 0, 0}, //240
+  {0, 0, 0, 1}, //245
+  {0, 0, 0, 0}, //250
+  {0, 0, 0, 1}, //255
+  {0, 0, 0, 0}, //260
+  {0, 0, 0, 1}, //265
+  {0, 1, 0, 0}, //270
+  {0, 1, 0, 1}, //275
+  {0, 1, 0, 0}, //280
+  {1, 1, 0, 1}, //285
+  {1, 1, 0, 0}, //290
+  {1, 1, 0, 1}, //295
+  {1, 1, 0, 0}, //300
+  {1, 1, 0, 1}, //305
+  {1, 1, 0, 0}, //310
+  {1, 1, 0, 1}, //315
+  {1, 1, 0, 0}, //320
+  {1, 1, 0, 1}, //325
+  {1, 1, 0, 0}, //330
+  {1, 1, 0, 1}, //335
+  {1, 1, 0, 0}, //340
+  {1, 1, 0, 1}, //345
+  {1, 1, 0, 0}, //350
+  {0, 1, 0, 1}, //355
+  {0, 1, 0, 0}, //360
+  {0, 1, 0, 1}, //365
+  {0, 1, 0, 0}, //370
+  {0, 1, 0, 1}, //375
+  {0, 1, 0, 0}, //380
+  {0, 1, 0, 1}, //385
+  {0, 1, 0, 0}, //390
+  {0, 1, 0, 1}, //395
+  {0, 1, 0, 0}, //400
+  {0, 1, 0, 1}, //405
+  {0, 0, 0, 0}, //410
+  {0, 0, 0, 1}, //415
+  {0, 0, 0, 0}, //420
+  {0, 0, 0, 1}, //425
+  {0, 0, 0, 0}, //430
+  {0, 0, 0, 1}, //435
+  {0, 0, 0, 0}, //440
+  {0, 0, 0, 1}, //445
+  {0, 0, 0, 0}, //450
+  {0, 0, 0, 1}, //455
+  {0, 0, 0, 0}, //460
+  {1, 0, 0, 1}, //465
+  {1, 0, 0, 0}, //470
+  {1, 0, 0, 1}, //475
+  {1, 0, 0, 0}, //480
+  {1, 0, 0, 1}, //485
+  {1, 0, 0, 0}, //490
+  {1, 0, 0, 1}, //495
+  {1, 0, 0, 0}, //500
+  {1, 0, 0, 1}, //505
+  {1, 0, 0, 0}, //510
+  {1, 0, 0, 1}, //515
+  {1, 0, 0, 0}, //520
+  {1, 0, 0, 1}, //525
+  {1, 0, 0, 0}, //530
+  {0, 0, 0, 1}, //535
+  {0, 0, 0, 0}, //540
+  {0, 0, 0, 1}, //545
+  {0, 0, 0, 0}, //550
+  {0, 0, 0, 1}, //555
+  {0, 0, 0, 0}, //560
+  {0, 0, 0, 1}, //565
+  {0, 0, 0, 0}, //570
+  {0, 0, 0, 1}, //575
+  {0, 0, 0, 0}, //580
+  {0, 0, 0, 1}, //585
+  {0, 0, 0, 0}, //590
+  {0, 0, 0, 1}, //595
+  {0, 0, 0, 0}, //600
+  {0, 0, 0, 1}, //605
+  {0, 0, 0, 0}, //610
+  {0, 0, 0, 1}, //615
+  {0, 0, 0, 0}, //620
+  {0, 0, 0, 1}, //625
+  {0, 1, 0, 0}, //630
+  {0, 1, 0, 1}, //635
+  {0, 1, 0, 0}, //640
+  {1, 1, 0, 1}, //645
+  {1, 1, 0, 0}, //650
+  {1, 1, 0, 1}, //655
+  {1, 1, 0, 0}, //660
+  {1, 1, 0, 1}, //665
+  {1, 1, 0, 0}, //670
+  {1, 1, 0, 1}, //675
+  {1, 1, 0, 0}, //680
+  {1, 1, 0, 1}, //685
+  {1, 1, 0, 0}, //690
+  {1, 1, 0, 1}, //695
+  {1, 1, 0, 0}, //700
+  {1, 0, 0, 1}, //705
+  {1, 0, 0, 0}, //710
+  {0, 0, 0, 1}  //715
 };
 
 float rpm = 1200.0;
@@ -119,9 +227,9 @@ float scale_rpm(int val, int fine)
   #else
   float p = 1.0*val/1023;
   #endif
-  
+
   p = (pow(RPM_LOG, p)-1)/(RPM_LOG-1);
-    
+
   return MIN_RPM + p*(MAX_RPM-MIN_RPM);
 }
 
@@ -133,7 +241,7 @@ void tick(void)
   {
     return;
   }
-  
+
   //Move a step forward, and maybe wrap around
   if(++phase >= N_PHASES) phase=0;
 
@@ -143,7 +251,7 @@ void tick(void)
   {
     digitalWrite(output_pins[i], phaseOutputs[i]);
   }
-  
+
 }
 
 void setup() {
@@ -166,13 +274,13 @@ void loop() {
   if(USE_RPM_DIAL)
   {
     int newVal = analogRead(rpm_dial_pin);
-    
+
     #ifdef USE_RPM_FINE
     int newFine = analogRead(rpm_fine_pin);
     #else
     int newFine = 512;
     #endif
-    
+
     if( (abs(newVal-oldrpmval) > 0) || ((abs(newFine-oldrpmfine) > 1)))
     {
       rpm = scale_rpm(newVal, newFine);
@@ -189,7 +297,7 @@ void loop() {
       time_per_phase = stepTime(rpm);
       Timer1.setPeriod(time_per_phase);
     }
-    
+
   }
   delay(100);
 }
