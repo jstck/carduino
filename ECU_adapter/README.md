@@ -1,11 +1,13 @@
 # Denso ECU adapter PCB
 
-## License
-All PCB layouts in this directory are licensed under [Creative Commons Attribution-Sharealike 4.0 (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/)
-Copyright 2016 John Stäck and Vulkteamet
+## Description
 
 These are various PCB layouts for connecting a custom ECU (such as MegaSquirt or Speeduino) to the original car wiring harness, using a Nippon Denso connector.
 These are found in various cars, but mostly Japanese cars from the 1990's. This includes at least some model years of Mazda MX-5/323 (Miata/Protege), Honda Civic/Prelude/Accord, Toyota Corolla, Ford Escort and Mitsubishi Lancer
+
+## License
+All PCB layouts in this directory are licensed under [Creative Commons Attribution-Sharealike 4.0 (CC BY-SA 4.0)](http://creativecommons.org/licenses/by-sa/4.0/)
+Copyright 2016 John Stäck and Vulkteamet
 
 ## Simple adapter
 The two "simple" layouts are just to mount the ECU connector header, and provide an easy way to solder cables to it. Comes in 48 and 64 pin versions.
